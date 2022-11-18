@@ -8,10 +8,8 @@ internal class ImageApiTest {
 
     @Test
     fun test() = runTest {
-        val images = ImageApi.retrofitService.getImages(10)
-        images.forEach {
-            println(it)
-        }
-        Assert.assertEquals(10, images.size)
+        val images = ImageApi.retrofitService.getImages(30)
+
+        Assert.assertEquals(30, images.size)
     }
 }

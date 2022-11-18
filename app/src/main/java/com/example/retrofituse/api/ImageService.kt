@@ -1,15 +1,8 @@
 package com.example.retrofituse.api
 
-import androidx.annotation.Nullable
 import com.example.retrofituse.BuildConfig
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonQualifier
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
-import com.squareup.moshi.addAdapter
+import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import okhttp3.ResponseBody
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
@@ -20,8 +13,10 @@ private const val BASE_URL = "https://api.unsplash.com/"
 
 private val moshi = Moshi.Builder()
     .add(NullToEmptyStringAdapter)
+    .add(UserNameAdapter)
     .addLast(KotlinJsonAdapterFactory())
     .build()
+
 
 private val retrofit = Retrofit.Builder()
     .baseUrl(BASE_URL)
@@ -33,7 +28,7 @@ interface ImageService {
     @Headers(
         "Authorization: Client-ID ${BuildConfig.SPLASH_API_KEY}"
     )
-    suspend fun getImages(@Query("count") count: Int): List<Photo>
+    suspend fun getImages(@Query("per_page") count: Int): List<Image>
 }
 
 object ImageApi {
@@ -43,7 +38,6 @@ object ImageApi {
 }
 
 private object NullToEmptyStringAdapter {
-
     @FromJson
     fun fromJson(reader: JsonReader): String {
         if (reader.peek() != JsonReader.Token.NULL) return reader.nextString()
@@ -52,5 +46,28 @@ private object NullToEmptyStringAdapter {
     }
 }
 
+private object UserNameAdapter {
+    @FromJson
+    @UserName
+    fun fromJson(reader: JsonReader): String {
+        var value = ""
+        reader.beginObject()
+        while (reader.hasNext()) {
+            if (reader.nextName() == "username") {
+                value = reader.nextString()
+            } else {
+                reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return value
+    }
+
+    @ToJson
+    fun toJson(@UserName userName: String): String {
+        return userName
+    }
+}
+
 @JsonQualifier
-annotation class NullToEmptyString
+annotation class UserName
